@@ -9,7 +9,7 @@ const client = new Client({
 
 // โหลดคำสั่ง
 const commands = [];
-const commandsPath = path.join(__dirname, 'commands');
+const commandsPath = path.join(__dirname, 'config', 'commands');
 fs.readdirSync(commandsPath).filter(f => f.endsWith('.js')).forEach(file => {
   const cmd = require(path.join(commandsPath, file));
   if ('data' in cmd && 'execute' in cmd) commands.push(cmd.data.toJSON());
