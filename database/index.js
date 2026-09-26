@@ -1,56 +1,32 @@
-cat > index.js << 'ENDOFFILE'
-require('dotenv').config();
-const { Client, GatewayIntentBits, Collection } = require('discord.js');
+cat > database/index.js << 'EOF'
 const fs = require('fs');
 const path = require('path');
 
-const client = new Client({
-  intents: [
-    GatewayIntentBits.Guilds,
-    GatewayIntentBits.GuildMessages,
-    GatewayIntentBits.MessageContent
-  ]
-});
+const DB_FILE = path.join(__dirname, 'user-db.json');
 
-client.commands = new Collection();
-
-const commandsPath = path.join(__dirname, 'config', 'commands');
-
-if (fs.existsSync(commandsPath)) {
-  const commandFiles = fs.readdirSync(commandsPath).filter(f => f.endsWith('.js'));
-  
-  for (const file of commandFiles) {
-    const cmd = require(path.join(commandsPath, file));
-    if (cmd.data && cmd.execute) {
-      client.commands.set(cmd.data.name, cmd);
-    }
+function readDB() {
+  try {
+    return JSON.parse(fs.readFileSync(DB_FILE, 'utf8'));
+  } catch {
+    return {};
   }
-  
-  console.log(`✅ โหลดคำสั่ง: ${client.commands.size} รายการ`);
-} else {
-  console.log(`⚠️ ไม่พบโฟลเดอร์: ${commandsPath}`);
 }
 
-client.on('clientReady', () => {
-  console.log(`✅ เข้าสู่ระบบแล้ว: ${client.user.tag}`);
-});
+function writeDB(data) {
+  fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2));
+}
 
-client.on('messageCreate', async msg => {
-  if (!msg.content.startsWith('!') || msg.author.bot) return;
-  
-  const [name, ...args] = msg.content.slice(1).split(/ +/);
-  const cmd = client.commands.get(name);
-  
-  if (cmd) {
-    try {
-      await cmd.execute(msg, args);
-    } catch (e) {
-      console.error(e);
-      msg.reply('❌ เกิดข้อผิดพลาด');
-    }
-  }
-});
+function getUser(id) {
+  const db = readDB();
+  return db[id] || null;
+}
 
-client.login(process.env.DISCORD_BOT_TOKEN);
-ENDOFFILE
-             
+function setUser(id, data) {
+  const db = readDB();
+  db[id] = data;
+  writeDB(db);
+  return data;
+}
+
+module.exports = { getUser, setUser };
+EOF
