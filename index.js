@@ -4,34 +4,48 @@ const fs = require('fs');
 const path = require('path');
 
 const client = new Client({
-  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages]
+  intents: [
+    GatewayIntentBits.Guilds,
+    GatewayIntentBits.GuildMessages,
+    GatewayIntentBits.MessageContent
+  ]
 });
-
-// โหลดคำสั่ง
-const commands = [];
-const commandsPath = path.join(__dirname, 'config', 'commands');
-fs.readdirSync(commandsPath).filter(f => f.endsWith('.js')).forEach(file => {
-  const cmd = require(path.join(commandsPath, file));
-  if ('data' in cmd && 'execute' in cmd) commands.push(cmd.data.toJSON());
-});
-
-// ลงทะเบียนคำสั่ง
-const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_BOT_TOKEN);
-(async () => {
-  try {
-    console.log('กำลังลงทะเบียนคำสั่ง...');
-    await rest.put(
-      Routes.applicationCommands(process.env.DISCORD_CLIENT_ID),
-      { body: commands }
-    );
-    console.log('✅ คำสั่งพร้อมใช้งาน');
-  } catch (e) { console.error(e); }
-})();
 
 client.commands = new Collection();
-fs.readdirSync(commandsPath).filter(f => f.endsWith('.js')).forEach(file => {
-  const cmd = require(path.join(commandsPath, file));
-  client.commands.set(cmd.data.name, cmd);
+
+// โหลดคำสั่ง — เส้นทางที่ถูกต้อง ✅
+const commandsPath = path.join(__dirname, 'config', 'commands');
+const commands = [];
+
+if (fs.existsSync(commandsPath)) {
+  const commandFiles = fs.readdirSync(commandsPath).filter(f => f.endsWith('.js'));
+  for (const file of commandFiles) {
+    const cmd = require(path.join(commandsPath, file));
+    if (cmd.data && cmd.execute) {
+      client.commands.set(cmd.data.name, cmd);
+      commands.push(cmd.data.toJSON());
+    }
+  }
+  console.log(`✅ โหลดคำสั่ง: ${client.commands.size} รายการ`);
+} else {
+  console.log(`⚠️ ไม่พบโฟลเดอร์: ${commandsPath}`);
+}
+
+client.on('ready', async () => {
+  console.log(`✅ เข้าสู่ระบบในชื่อ ${client.user.tag}`);
+  
+  // ลงทะเบียนคำสั่ง
+  if (commands.length > 0 && process.env.DISCORD_CLIENT_ID) {
+    const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_TOKEN);
+    try {
+      console.log('🔄 กำลังลงทะเบียนคำสั่ง...');
+      await rest.put(
+        Routes.applicationCommands(process.env.DISCORD_CLIENT_ID),
+        { body: commands }
+      );
+      console.log('✅ ลงทะเบียนคำสั่งสำเร็จ!');
+    } catch (e) { console.error(e); }
+  }
 });
 
 client.on('interactionCreate', async interaction => {
@@ -45,9 +59,4 @@ client.on('interactionCreate', async interaction => {
   }
 });
 
-client.on('ready', () => {
-  console.log(`✅ เข้าสู่ระบบในชื่อ ${client.user.tag}`);
-  client.user.setActivity('/ด่านตรวจ — เริ่มผจญภัย', { type: 'PLAYING' });
-});
-
-client.login(process.env.DISCORD_BOT_TOKEN);
+client.login(process.env.DISCORD_TOKEN);
