@@ -12,7 +12,7 @@
 ## ติดตั้งและใช้งาน
 ```bash
 # ติดตั้ง
-git clone https://github.com/[ชื่อคุณ]/ดาวGM.git
+git clone https://github.com/bestloveant001-beep/ดาวGM.git
 cd ดาวGM
 npm install
 
