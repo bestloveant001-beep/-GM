@@ -14,16 +14,14 @@ const client = new Client({
 client.commands = new Collection();
 
 const commandsPath = path.join(__dirname, 'config', 'commands');
-const commands = [];
 
 if (fs.existsSync(commandsPath)) {
-  const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'));
+  const commandFiles = fs.readdirSync(commandsPath).filter(f => f.endsWith('.js'));
   
   for (const file of commandFiles) {
     const cmd = require(path.join(commandsPath, file));
     if (cmd.data && cmd.execute) {
       client.commands.set(cmd.data.name, cmd);
-      commands.push(cmd.data);
     }
   }
   
@@ -47,7 +45,7 @@ client.on('messageCreate', async msg => {
       await cmd.execute(msg, args);
     } catch (e) {
       console.error(e);
-      msg.reply('❌ เกิดข้อผิดพลาดในการทำงาน');
+      msg.reply('❌ เกิดข้อผิดพลาด');
     }
   }
 });
