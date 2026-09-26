@@ -31,7 +31,7 @@ if (fs.existsSync(commandsPath)) {
   console.log(`⚠️ ไม่พบโฟลเดอร์: ${commandsPath}`);
 }
 
-client.on('ready', () => {
+client.on('clientReady', () => {
   console.log(`✅ เข้าสู่ระบบแล้ว: ${client.user.tag}`);
 });
 
