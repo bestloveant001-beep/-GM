@@ -1,3 +1,4 @@
+cat > index.js << 'ENDOFFILE'
 require('dotenv').config();
 const { Client, GatewayIntentBits, Collection } = require('discord.js');
 const fs = require('fs');
@@ -51,3 +52,5 @@ client.on('messageCreate', async msg => {
 });
 
 client.login(process.env.DISCORD_BOT_TOKEN);
+ENDOFFILE
+             
